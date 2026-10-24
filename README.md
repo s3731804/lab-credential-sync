@@ -1,4 +1,8 @@
-# AWS Learner Lab Sync
+# Lab Credential Sync
+
+> **Unofficial.** Not affiliated with, endorsed by, or supported by
+> Amazon Web Services, AWS Academy, or Vocareum. It works with AWS
+> Academy Learner Lab sandboxes.
 
 A small browser extension + local helper that saves you re-copying AWS
 Learner Lab's temporary CLI credentials into `~/.aws/credentials` every
@@ -22,7 +26,7 @@ Linux and Windows.
 3. That script checks the block strictly (a `[profile]` header and
    exactly the three expected keys, nothing else) and writes it to
    `~/.aws/credentials` with `0600` permissions, under a
-   `# managed by aws-lab-sync` marker line.
+   `# managed by lab-credential-sync` marker line.
 
 **Your existing credentials are never deleted.** If
 `~/.aws/credentials` doesn't have that marker — i.e. it's your own
@@ -39,7 +43,7 @@ Nothing is sent anywhere except from your browser to a process running
 locally on your own computer. There is no server, no telemetry, no
 network request of any kind in either the extension or the host
 script — you can verify this by reading `extension/content.js`,
-`extension/background.js`, and `host/aws_lab_sync_host.py` in full;
+`extension/background.js`, and `host/lab_credential_sync_host.py` in full;
 none of them total more than ~150 lines.
 
 ## Why a native helper instead of just downloading a file?
@@ -140,14 +144,14 @@ no terminal command, every session.
 - Remove the extension from your browser (`chrome://extensions` or
   `about:debugging` → Remove, for Firefox temporary add-ons it's
   enough to just restart the browser).
-- Delete `~/.aws-lab-sync/` (the helper script).
+- Delete `~/.lab-credential-sync/` (the helper script).
 - Delete the native messaging manifest:
-  - Chromium-based, macOS: `com.aws_lab_sync.host.json` in the `NativeMessagingHosts` folder under `~/Library/Application Support/` → `Google/Chrome`, `Chromium`, `BraveSoftware/Brave-Browser` or `Microsoft Edge`.
+  - Chromium-based, macOS: `com.lab_credential_sync.host.json` in the `NativeMessagingHosts` folder under `~/Library/Application Support/` → `Google/Chrome`, `Chromium`, `BraveSoftware/Brave-Browser` or `Microsoft Edge`.
   - Chromium-based, Linux: the same file under `~/.config/` → `google-chrome`, `chromium`, `BraveSoftware/Brave-Browser` or `microsoft-edge`, each in `NativeMessagingHosts/`.
-  - Chromium-based, Windows: delete the `NativeMessagingHosts\com.aws_lab_sync.host` registry key under each of `HKCU:\Software\Google\Chrome`, `HKCU:\Software\Chromium`, `HKCU:\Software\BraveSoftware\Brave-Browser` and `HKCU:\Software\Microsoft\Edge`.
-  - Firefox, macOS: `~/Library/Application Support/Mozilla/NativeMessagingHosts/com.aws_lab_sync.host.json`
-  - Firefox, Linux: `~/.mozilla/native-messaging-hosts/com.aws_lab_sync.host.json`
-  - Firefox, Windows: delete the `HKCU:\Software\Mozilla\NativeMessagingHosts\com.aws_lab_sync.host` registry key.
+  - Chromium-based, Windows: delete the `NativeMessagingHosts\com.lab_credential_sync.host` registry key under each of `HKCU:\Software\Google\Chrome`, `HKCU:\Software\Chromium`, `HKCU:\Software\BraveSoftware\Brave-Browser` and `HKCU:\Software\Microsoft\Edge`.
+  - Firefox, macOS: `~/Library/Application Support/Mozilla/NativeMessagingHosts/com.lab_credential_sync.host.json`
+  - Firefox, Linux: `~/.mozilla/native-messaging-hosts/com.lab_credential_sync.host.json`
+  - Firefox, Windows: delete the `HKCU:\Software\Mozilla\NativeMessagingHosts\com.lab_credential_sync.host` registry key.
 
 ## Scope and limitations
 

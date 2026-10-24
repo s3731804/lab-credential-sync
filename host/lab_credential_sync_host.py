@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-AWS Learner Lab Sync — native messaging host.
+Lab Credential Sync — native messaging host.
 
 Reads a single JSON message from the extension over stdin (Chrome's
 native messaging framing: 4-byte little-endian length + UTF-8 JSON),
@@ -29,7 +29,7 @@ import os
 import re
 import time
 
-MARKER = "# managed by aws-lab-sync - overwritten on each sync"
+MARKER = "# managed by lab-credential-sync - overwritten on each sync"
 
 # Exactly what a Learner Lab "AWS CLI" block contains. Anything else is
 # rejected rather than passed through, so a page can't slip extra
@@ -100,7 +100,7 @@ def write_credentials(creds_text):
     aws_dir = os.path.expanduser("~/.aws")
     os.makedirs(aws_dir, exist_ok=True, mode=0o700)
     cred_path = os.path.join(aws_dir, "credentials")
-    tmp_path = os.path.join(aws_dir, f".credentials.aws-lab-sync-{os.getpid()}")
+    tmp_path = os.path.join(aws_dir, f".credentials.lab-credential-sync-{os.getpid()}")
 
     content = "\n".join(
         [MARKER, f"[{profile}]"] + [f"{k}={values[k]}" for k in KEY_PATTERNS]

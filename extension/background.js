@@ -1,6 +1,6 @@
 // Native messaging host ID — must match the "name" field in the host
 // manifest JSON installed on the user's machine (see host/install.*).
-const HOST_NAME = "com.aws_lab_sync.host";
+const HOST_NAME = "com.lab_credential_sync.host";
 
 chrome.runtime.onMessage.addListener((message) => {
   if (message.type !== "NEW_CREDENTIALS" || typeof message.data !== "string") {
@@ -16,7 +16,7 @@ chrome.runtime.onMessage.addListener((message) => {
     credentials.includes("aws_session_token");
 
   if (!isValid) {
-    console.warn("AWS Learner Lab Sync: invalid credential block received.");
+    console.warn("Lab Credential Sync: invalid credential block received.");
     return;
   }
 
@@ -26,7 +26,7 @@ chrome.runtime.onMessage.addListener((message) => {
     (response) => {
       if (chrome.runtime.lastError) {
         console.warn(
-          "AWS Learner Lab Sync: native helper unreachable —",
+          "Lab Credential Sync: native helper unreachable —",
           chrome.runtime.lastError.message
         );
         chrome.storage.local.set({ lastSyncStatus: "helper_missing" });

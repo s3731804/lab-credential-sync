@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAql9yG60wHBxbjf4n479Tdi9XUNgpQ/8awTqj6jFrRj9xOPcSZKHFntQpZ33UkJi9og3VJqme4n/XD3uEDeLREx/N+h+NpDNlde5aSULSh2RjTaWi+m2W1Y1gtOa1ZGGiFhrxW+Dv0i6PTiDwo7ZpsEiZk6mq7iI23oA+/YESm0nJoz17EF6jsovzgtmaQvi2v7TDa7uHpvskWNrqT2g0G+3lOZoRdZHuYWw9UUAZV33AJt+RU8EKqOSJxQ20i2VrFtvznNir8yFplka9WV3EuNOZhfcHuZgOclxYt8IMqquq6afBOndI46yuLtntjJ3UIwx2cBCadKzwhuXCv4tLTwIDAQAB",
-  "name": "AWS Learner Lab Sync",
+  "name": "Lab Credential Sync",
   "version": "2.0",
-  "description": "Syncs revealed AWS Learner Lab CLI credentials to your local AWS config via a native helper you install yourself.",
+  "description": "Unofficial companion for AWS Academy Learner Lab: syncs the CLI credentials you reveal to ~/.aws/credentials via a local helper.",
 
   "permissions": [
     "nativeMessaging",

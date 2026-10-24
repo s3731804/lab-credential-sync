@@ -1,11 +1,11 @@
 // Fill these in once you've published the repo.
-const REPO_URL = "https://github.com/yourname/aws-lab-sync";
+const REPO_URL = "https://github.com/yourname/lab-credential-sync";
 const SETUP_URL = `${REPO_URL}#setup`;
 
 document.getElementById("repo-link").href = SETUP_URL;
 document.getElementById("source-link").href = REPO_URL;
 
-const HOST_NAME = "com.aws_lab_sync.host";
+const HOST_NAME = "com.lab_credential_sync.host";
 const statusEl = document.getElementById("status");
 const setupEl = document.getElementById("setup");
 

@@ -1,4 +1,4 @@
-# Installs the AWS Learner Lab Sync native messaging host on Windows,
+# Installs the Lab Credential Sync native messaging host on Windows,
 # for Chrome and/or Firefox.
 #
 # Usage (PowerShell):
@@ -21,9 +21,9 @@ if (-not $ChromeExtensionId -and -not $Firefox) {
 }
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$InstallDir = Join-Path $env:USERPROFILE ".aws-lab-sync"
-$HostScript = Join-Path $InstallDir "aws_lab_sync_host.py"
-$WrapperPath = Join-Path $InstallDir "aws_lab_sync_host.bat"
+$InstallDir = Join-Path $env:USERPROFILE ".lab-credential-sync"
+$HostScript = Join-Path $InstallDir "lab_credential_sync_host.py"
+$WrapperPath = Join-Path $InstallDir "lab_credential_sync_host.bat"
 
 # Prefer the "py" launcher (the python.org installer's default), since
 # plain "python" is often missing or the Microsoft Store stub.
@@ -37,7 +37,7 @@ if (Get-Command py -ErrorAction SilentlyContinue) {
 }
 
 New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
-Copy-Item (Join-Path $ScriptDir "aws_lab_sync_host.py") $HostScript -Force
+Copy-Item (Join-Path $ScriptDir "lab_credential_sync_host.py") $HostScript -Force
 
 @"
 @echo off
@@ -65,14 +65,14 @@ function Install-Manifest($TemplateFile, $RegPaths, $ExtraReplace) {
 
 if ($ChromeExtensionId) {
     Install-Manifest `
-        -TemplateFile "com.aws_lab_sync.host.chromium.json.template" `
+        -TemplateFile "com.lab_credential_sync.host.chromium.json.template" `
         -RegPaths @(
             # Each Chromium-based browser reads its own key; registering
             # one it doesn't have installed is harmless.
-            "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.aws_lab_sync.host",
-            "HKCU:\Software\Chromium\NativeMessagingHosts\com.aws_lab_sync.host",
-            "HKCU:\Software\BraveSoftware\Brave-Browser\NativeMessagingHosts\com.aws_lab_sync.host",
-            "HKCU:\Software\Microsoft\Edge\NativeMessagingHosts\com.aws_lab_sync.host"
+            "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.lab_credential_sync.host",
+            "HKCU:\Software\Chromium\NativeMessagingHosts\com.lab_credential_sync.host",
+            "HKCU:\Software\BraveSoftware\Brave-Browser\NativeMessagingHosts\com.lab_credential_sync.host",
+            "HKCU:\Software\Microsoft\Edge\NativeMessagingHosts\com.lab_credential_sync.host"
         ) `
         -ExtraReplace @("__EXTENSION_ID__", $ChromeExtensionId)
     Write-Host "Chrome/Chromium/Brave/Edge: done."
@@ -80,8 +80,8 @@ if ($ChromeExtensionId) {
 
 if ($Firefox) {
     Install-Manifest `
-        -TemplateFile "com.aws_lab_sync.host.firefox.json.template" `
-        -RegPaths @("HKCU:\Software\Mozilla\NativeMessagingHosts\com.aws_lab_sync.host")
+        -TemplateFile "com.lab_credential_sync.host.firefox.json.template" `
+        -RegPaths @("HKCU:\Software\Mozilla\NativeMessagingHosts\com.lab_credential_sync.host")
     Write-Host "Firefox: done."
 }
 

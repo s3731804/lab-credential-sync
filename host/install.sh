@@ -1,5 +1,5 @@
 #!/bin/bash
-# Installs the AWS Learner Lab Sync native messaging host on macOS or
+# Installs the Lab Credential Sync native messaging host on macOS or
 # Linux, for Chromium-based browsers (Chrome, Chromium, Brave, Edge)
 # and/or Firefox.
 #
@@ -49,11 +49,11 @@ if [ "$DO_CHROME" = false ] && [ "$DO_FIREFOX" = false ]; then
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-INSTALL_DIR="$HOME/.aws-lab-sync"
-HOST_SCRIPT="$INSTALL_DIR/aws_lab_sync_host.py"
+INSTALL_DIR="$HOME/.lab-credential-sync"
+HOST_SCRIPT="$INSTALL_DIR/lab_credential_sync_host.py"
 
 mkdir -p "$INSTALL_DIR"
-cp "$SCRIPT_DIR/aws_lab_sync_host.py" "$HOST_SCRIPT"
+cp "$SCRIPT_DIR/lab_credential_sync_host.py" "$HOST_SCRIPT"
 chmod +x "$HOST_SCRIPT"
 
 IS_MAC=false
@@ -65,9 +65,9 @@ register_chromium() {
   sed \
     -e "s#__HOST_SCRIPT_PATH__#$HOST_SCRIPT#" \
     -e "s#__EXTENSION_ID__#$CHROME_EXT_ID#" \
-    "$SCRIPT_DIR/com.aws_lab_sync.host.chromium.json.template" \
-    > "$manifest_dir/com.aws_lab_sync.host.json"
-  echo "$label: registered manifest at $manifest_dir/com.aws_lab_sync.host.json"
+    "$SCRIPT_DIR/com.lab_credential_sync.host.chromium.json.template" \
+    > "$manifest_dir/com.lab_credential_sync.host.json"
+  echo "$label: registered manifest at $manifest_dir/com.lab_credential_sync.host.json"
 }
 
 if [ "$DO_CHROME" = true ]; then
@@ -119,10 +119,10 @@ if [ "$DO_FIREFOX" = true ]; then
 
   sed \
     -e "s#__HOST_SCRIPT_PATH__#$HOST_SCRIPT#" \
-    "$SCRIPT_DIR/com.aws_lab_sync.host.firefox.json.template" \
-    > "$MANIFEST_DIR/com.aws_lab_sync.host.json"
+    "$SCRIPT_DIR/com.lab_credential_sync.host.firefox.json.template" \
+    > "$MANIFEST_DIR/com.lab_credential_sync.host.json"
 
-  echo "Firefox: registered manifest at $MANIFEST_DIR/com.aws_lab_sync.host.json"
+  echo "Firefox: registered manifest at $MANIFEST_DIR/com.lab_credential_sync.host.json"
 fi
 
 echo ""
