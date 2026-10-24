@@ -25,40 +25,63 @@ $InstallDir = Join-Path $env:USERPROFILE ".aws-lab-sync"
 $HostScript = Join-Path $InstallDir "aws_lab_sync_host.py"
 $WrapperPath = Join-Path $InstallDir "aws_lab_sync_host.bat"
 
+# Prefer the "py" launcher (the python.org installer's default), since
+# plain "python" is often missing or the Microsoft Store stub.
+if (Get-Command py -ErrorAction SilentlyContinue) {
+    $Python = "py -3"
+} elseif (Get-Command python -ErrorAction SilentlyContinue) {
+    $Python = "python"
+} else {
+    Write-Host "Python 3 not found on PATH -- install it from python.org first."
+    exit 1
+}
+
 New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
 Copy-Item (Join-Path $ScriptDir "aws_lab_sync_host.py") $HostScript -Force
 
 @"
 @echo off
-python "$HostScript" %*
+$Python "$HostScript" %*
 "@ | Set-Content -Path $WrapperPath -Encoding ASCII
 
-function Install-Manifest($TemplateFile, $RegPath, $ExtraReplace) {
+# JSON needs each backslash in the path doubled. (-replace's pattern is
+# a regex, so '\\' matches one backslash; the replacement is literal.)
+function Install-Manifest($TemplateFile, $RegPaths, $ExtraReplace) {
     $ManifestPath = Join-Path $InstallDir ($TemplateFile -replace '\.template$', '')
     $Template = Get-Content (Join-Path $ScriptDir $TemplateFile) -Raw
-    $Manifest = $Template -replace "__HOST_SCRIPT_PATH__", ($WrapperPath -replace '\\', '\\\\')
+    $Manifest = $Template -replace "__HOST_SCRIPT_PATH__", ($WrapperPath -replace '\\', '\\')
     if ($ExtraReplace) {
         $Manifest = $Manifest -replace $ExtraReplace.Item(0), $ExtraReplace.Item(1)
     }
     Set-Content -Path $ManifestPath -Value $Manifest -Encoding ASCII
 
-    New-Item -Path $RegPath -Force | Out-Null
-    Set-ItemProperty -Path $RegPath -Name "(Default)" -Value $ManifestPath
-    Write-Host "Registered manifest at: $ManifestPath"
+    foreach ($RegPath in $RegPaths) {
+        New-Item -Path $RegPath -Force | Out-Null
+        Set-ItemProperty -Path $RegPath -Name "(Default)" -Value $ManifestPath
+        Write-Host "Registered: $RegPath"
+    }
+    Write-Host "Manifest at: $ManifestPath"
 }
 
 if ($ChromeExtensionId) {
     Install-Manifest `
         -TemplateFile "com.aws_lab_sync.host.chromium.json.template" `
-        -RegPath "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.aws_lab_sync.host" `
+        -RegPaths @(
+            # Each Chromium-based browser reads its own key; registering
+            # one it doesn't have installed is harmless.
+            "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.aws_lab_sync.host",
+            "HKCU:\Software\Chromium\NativeMessagingHosts\com.aws_lab_sync.host",
+            "HKCU:\Software\BraveSoftware\Brave-Browser\NativeMessagingHosts\com.aws_lab_sync.host",
+            "HKCU:\Software\Microsoft\Edge\NativeMessagingHosts\com.aws_lab_sync.host"
+        ) `
         -ExtraReplace @("__EXTENSION_ID__", $ChromeExtensionId)
-    Write-Host "Chrome: done."
+    Write-Host "Chrome/Chromium/Brave/Edge: done."
 }
 
 if ($Firefox) {
     Install-Manifest `
         -TemplateFile "com.aws_lab_sync.host.firefox.json.template" `
-        -RegPath "HKCU:\Software\Mozilla\NativeMessagingHosts\com.aws_lab_sync.host"
+        -RegPaths @("HKCU:\Software\Mozilla\NativeMessagingHosts\com.aws_lab_sync.host")
     Write-Host "Firefox: done."
 }
 

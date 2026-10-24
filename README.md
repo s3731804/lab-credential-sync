@@ -73,6 +73,11 @@ load it from source instead; see "Loading from source" further down.
    ```
    Windows: `.\install.ps1 -ChromeExtensionId "<your-extension-id>"`
 
+   This registers the helper with every Chromium-based browser it
+   finds (Chrome, Chromium, Brave, Edge). On macOS/Linux a browser is
+   only found once it's been opened at least once, so open a newly
+   installed one first and re-run the script if needed.
+
 ### Firefox
 
 1. Install the signed `.xpi` from the latest
@@ -137,9 +142,9 @@ no terminal command, every session.
   enough to just restart the browser).
 - Delete `~/.aws-lab-sync/` (the helper script).
 - Delete the native messaging manifest:
-  - Chrome, macOS: `~/Library/Application Support/Google/Chrome/NativeMessagingHosts/com.aws_lab_sync.host.json`
-  - Chrome, Linux: `~/.config/google-chrome/NativeMessagingHosts/com.aws_lab_sync.host.json`
-  - Chrome, Windows: delete the `HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.aws_lab_sync.host` registry key.
+  - Chromium-based, macOS: `com.aws_lab_sync.host.json` in the `NativeMessagingHosts` folder under `~/Library/Application Support/` → `Google/Chrome`, `Chromium`, `BraveSoftware/Brave-Browser` or `Microsoft Edge`.
+  - Chromium-based, Linux: the same file under `~/.config/` → `google-chrome`, `chromium`, `BraveSoftware/Brave-Browser` or `microsoft-edge`, each in `NativeMessagingHosts/`.
+  - Chromium-based, Windows: delete the `NativeMessagingHosts\com.aws_lab_sync.host` registry key under each of `HKCU:\Software\Google\Chrome`, `HKCU:\Software\Chromium`, `HKCU:\Software\BraveSoftware\Brave-Browser` and `HKCU:\Software\Microsoft\Edge`.
   - Firefox, macOS: `~/Library/Application Support/Mozilla/NativeMessagingHosts/com.aws_lab_sync.host.json`
   - Firefox, Linux: `~/.mozilla/native-messaging-hosts/com.aws_lab_sync.host.json`
   - Firefox, Windows: delete the `HKCU:\Software\Mozilla\NativeMessagingHosts\com.aws_lab_sync.host` registry key.
