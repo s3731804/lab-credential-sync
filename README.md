@@ -44,7 +44,8 @@ locally on your own computer. There is no server, no telemetry, no
 network request of any kind in either the extension or the host
 script — you can verify this by reading `extension/content.js`,
 `extension/background.js`, and `host/lab_credential_sync_host.py` in full;
-none of them total more than ~150 lines.
+none of them total more than ~150 lines. See [PRIVACY.md](PRIVACY.md)
+for the formal privacy policy.
 
 ## Why a native helper instead of just downloading a file?
 
@@ -152,6 +153,22 @@ no terminal command, every session.
   - Firefox, macOS: `~/Library/Application Support/Mozilla/NativeMessagingHosts/com.lab_credential_sync.host.json`
   - Firefox, Linux: `~/.mozilla/native-messaging-hosts/com.lab_credential_sync.host.json`
   - Firefox, Windows: delete the `HKCU:\Software\Mozilla\NativeMessagingHosts\com.lab_credential_sync.host` registry key.
+
+## Packaging for the stores (maintainers)
+
+```bash
+./package.sh
+```
+
+Builds `dist/lab-credential-sync-chromium-<version>.zip` (Chrome Web
+Store upload, with the manifest's development `key` removed) and
+`dist/lab-credential-sync-firefox-<version>.zip` (AMO, linted with
+`web-ext`). With `WEB_EXT_API_KEY` and `WEB_EXT_API_SECRET` set to
+your [AMO API credentials](https://addons.mozilla.org/developers/addon/api/key/),
+it also signs the Firefox build as unlisted and saves the signed
+`.xpi` to `dist/` for a GitHub Release. Bump `"version"` in both
+manifests before each release; the script refuses to run if they
+differ.
 
 ## Scope and limitations
 
