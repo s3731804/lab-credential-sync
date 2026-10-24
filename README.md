@@ -14,6 +14,42 @@ project against their own Learner Lab sandbox.
 **Supported:** Chrome/Chromium/Brave/Edge and Firefox, on macOS,
 Linux and Windows.
 
+## Quick install
+
+Needs Python 3. Worth a skim of [what it actually does](#what-it-actually-does-read-this-before-installing)
+first, since step 2 installs a small program on your computer.
+
+### Firefox
+
+1. **[Add to Firefox](https://github.com/s3731804/lab-credential-sync/releases/latest/download/lab-credential-sync.xpi)**:
+   Firefox asks to confirm; click **Continue to installation**, then
+   **Add**. (Signed by Mozilla.)
+2. **Install the helper**, by pasting one line into a terminal:
+
+   macOS / Linux:
+   ```bash
+   curl -fsSL https://github.com/s3731804/lab-credential-sync/releases/latest/download/install.sh | bash -s -- --firefox
+   ```
+   Windows (PowerShell):
+   ```powershell
+   iwr -useb https://github.com/s3731804/lab-credential-sync/releases/latest/download/install.ps1 -OutFile $env:TEMP\lcs-install.ps1; powershell -ExecutionPolicy Bypass -File $env:TEMP\lcs-install.ps1 -Firefox
+   ```
+3. Click the key icon in the toolbar. It should say **Helper
+   connected**. Then just start your lab and click **Show** as usual.
+
+### Chrome / Chromium / Brave / Edge
+
+Chrome Web Store link coming soon. For now, see
+[Loading from source](#loading-from-source-instead).
+
+### Prefer to read the installer before running it?
+
+Download [`install.sh`](https://github.com/s3731804/lab-credential-sync/releases/latest/download/install.sh)
+(or [`install.ps1`](https://github.com/s3731804/lab-credential-sync/releases/latest/download/install.ps1)),
+read it, then run `bash install.sh --firefox`. It fetches the helper
+from the same release it came from. The step-by-step setup below
+does the same thing from a clone of the repo.
+
 ## What it actually does (read this before installing)
 
 1. On any `*.vocareum.com` page, a content script watches for the AWS

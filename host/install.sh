@@ -8,6 +8,9 @@
 #   ./install.sh --firefox
 #   ./install.sh --chrome <extension-id> --firefox
 #
+# Or without cloning the repo:
+#   curl -fsSL https://github.com/s3731804/lab-credential-sync/releases/latest/download/install.sh | bash -s -- --firefox
+#
 # --chrome registers with every Chromium-based browser that has a
 # profile directory, so open a newly installed browser once before
 # running this. The extension ID is only needed for --chrome: find it
@@ -48,7 +51,35 @@ if [ "$DO_CHROME" = false ] && [ "$DO_FIREFOX" = false ]; then
   exit 1
 fi
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if ! command -v python3 >/dev/null; then
+  echo "Error: python3 not found. Install Python 3 first, then re-run this."
+  exit 1
+fi
+
+# Where the helper files come from. Run from a clone of the repo, they
+# sit next to this script. Run as a one-liner (curl ... | bash), there's
+# no script file, so they're downloaded from the GitHub release this
+# copy of the script belongs to. package.sh pins RELEASE_URL to that
+# release's tag in the copy it publishes.
+RELEASE_URL="https://github.com/s3731804/lab-credential-sync/releases/latest/download"
+HOST_FILES=(
+  lab_credential_sync_host.py
+  com.lab_credential_sync.host.chromium.json.template
+  com.lab_credential_sync.host.firefox.json.template
+)
+
+SCRIPT_PATH="${BASH_SOURCE[0]:-}"
+if [ -n "$SCRIPT_PATH" ] && [ -f "$(dirname "$SCRIPT_PATH")/${HOST_FILES[0]}" ]; then
+  SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+else
+  SCRIPT_DIR="$(mktemp -d)"
+  trap 'rm -rf "$SCRIPT_DIR"' EXIT
+  echo "Downloading helper files from $RELEASE_URL"
+  for f in "${HOST_FILES[@]}"; do
+    curl -fsSL "$RELEASE_URL/$f" -o "$SCRIPT_DIR/$f"
+  done
+fi
+
 INSTALL_DIR="$HOME/.lab-credential-sync"
 HOST_SCRIPT="$INSTALL_DIR/lab_credential_sync_host.py"
 

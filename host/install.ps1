@@ -6,6 +6,12 @@
 #   .\install.ps1 -Firefox
 #   .\install.ps1 -ChromeExtensionId "<id>" -Firefox
 #
+# Or without cloning the repo:
+#   iwr -useb https://github.com/s3731804/lab-credential-sync/releases/latest/download/install.ps1 -OutFile $env:TEMP\lcs-install.ps1; powershell -ExecutionPolicy Bypass -File $env:TEMP\lcs-install.ps1 -Firefox
+#
+# (-ExecutionPolicy Bypass because Windows blocks running downloaded
+# scripts by default; it applies to this one run only.)
+#
 # Find the Chrome extension ID at chrome://extensions with Developer
 # Mode enabled. Firefox's ID is fixed in the extension manifest, so it
 # isn't needed here.
@@ -16,11 +22,9 @@ param(
 )
 
 if (-not $ChromeExtensionId -and -not $Firefox) {
-    Write-Host "Usage: .\install.ps1 -ChromeExtensionId <id> | -Firefox | both"
-    exit 1
+    throw "Usage: .\install.ps1 -ChromeExtensionId <id> | -Firefox | both"
 }
 
-$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $InstallDir = Join-Path $env:USERPROFILE ".lab-credential-sync"
 $HostScript = Join-Path $InstallDir "lab_credential_sync_host.py"
 $WrapperPath = Join-Path $InstallDir "lab_credential_sync_host.bat"
@@ -32,8 +36,29 @@ if (Get-Command py -ErrorAction SilentlyContinue) {
 } elseif (Get-Command python -ErrorAction SilentlyContinue) {
     $Python = "python"
 } else {
-    Write-Host "Python 3 not found on PATH -- install it from python.org first."
-    exit 1
+    throw "Python 3 not found on PATH -- install it from python.org first."
+}
+
+# Where the helper files come from. Run from a clone of the repo, they
+# sit next to this script. Run as a one-liner there's no script file,
+# so they're downloaded from the GitHub release this copy belongs to.
+# package.sh pins $ReleaseUrl to that release's tag in the published copy.
+$ReleaseUrl = "https://github.com/s3731804/lab-credential-sync/releases/latest/download"
+$HostFiles = @(
+    "lab_credential_sync_host.py",
+    "com.lab_credential_sync.host.chromium.json.template",
+    "com.lab_credential_sync.host.firefox.json.template"
+)
+
+if ($PSScriptRoot -and (Test-Path (Join-Path $PSScriptRoot $HostFiles[0]))) {
+    $ScriptDir = $PSScriptRoot
+} else {
+    $ScriptDir = Join-Path ([System.IO.Path]::GetTempPath()) ("lab-credential-sync-" + [guid]::NewGuid())
+    New-Item -ItemType Directory -Force -Path $ScriptDir | Out-Null
+    Write-Host "Downloading helper files from $ReleaseUrl"
+    foreach ($f in $HostFiles) {
+        Invoke-WebRequest -UseBasicParsing -Uri "$ReleaseUrl/$f" -OutFile (Join-Path $ScriptDir $f)
+    }
 }
 
 New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
