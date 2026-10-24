@@ -34,14 +34,16 @@ python3 - "$DIST/chromium" "$CHROMIUM_ZIP" <<'EOF'
 import json, os, sys, zipfile
 src, out = sys.argv[1], sys.argv[2]
 with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
-    for name in sorted(os.listdir(src)):
-        path = os.path.join(src, name)
-        if name == "manifest.json":
-            manifest = json.load(open(path))
-            manifest.pop("key", None)
-            z.writestr(name, json.dumps(manifest, indent=2) + "\n")
-        else:
-            z.write(path, name)
+    for dirpath, _, files in os.walk(src):
+        for f in sorted(files):
+            path = os.path.join(dirpath, f)
+            name = os.path.relpath(path, src)
+            if name == "manifest.json":
+                manifest = json.load(open(path))
+                manifest.pop("key", None)
+                z.writestr(name, json.dumps(manifest, indent=2) + "\n")
+            else:
+                z.write(path, name)
 EOF
 echo "Built $CHROMIUM_ZIP"
 

@@ -16,7 +16,7 @@ rm -rf "$DIST"
 for browser in chromium firefox; do
   out="$DIST/$browser"
   mkdir -p "$out"
-  cp "$SRC"/*.js "$SRC"/*.html "$out/"
+  cp -r "$SRC"/*.js "$SRC"/*.html "$SRC"/icons "$out/"
   if [ "$browser" = chromium ]; then
     cp "$SRC/manifest.chromium.json" "$out/manifest.json"
   else
