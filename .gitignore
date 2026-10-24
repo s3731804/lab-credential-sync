@@ -1,0 +1,6 @@
+*.pem
+web-ext-artifacts/
+*.xpi
+*.crx
+.DS_Store
+node_modules/
