@@ -6,7 +6,7 @@
 
   "browser_specific_settings": {
     "gecko": {
-      "id": "lab-credential-sync@yourname.github.io",
+      "id": "lab-credential-sync@s3731804.github.io",
       "strict_min_version": "140.0",
       "data_collection_permissions": {
         "required": ["none"]

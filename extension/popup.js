@@ -1,5 +1,4 @@
-// Fill these in once you've published the repo.
-const REPO_URL = "https://github.com/yourname/lab-credential-sync";
+const REPO_URL = "https://github.com/s3731804/lab-credential-sync";
 const SETUP_URL = `${REPO_URL}#setup`;
 
 document.getElementById("repo-link").href = SETUP_URL;
