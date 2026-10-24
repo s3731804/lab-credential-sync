@@ -85,11 +85,10 @@ load it from source instead; see "Loading from source" further down.
 
 ### Firefox
 
-1. Install the signed `.xpi` from the latest
-   [GitHub Release](../../releases) (or the AMO unlisted link, if
-   you're using one: **[amo link — fill in after publishing]**).
-   Firefox installs it directly when you open the file — no
-   temporary-add-on reload-on-restart involved.
+1. Open **[lab-credential-sync.xpi](https://github.com/s3731804/lab-credential-sync/releases/latest/download/lab-credential-sync.xpi)**
+   in Firefox (always the latest [release](../../releases)). It's
+   signed by Mozilla, so Firefox offers to install it directly and it
+   stays installed across restarts.
 2. Install the helper:
    ```bash
    cd host
