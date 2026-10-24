@@ -11,6 +11,13 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SRC="$ROOT/extension"
 DIST="$ROOT/dist"
 
+# web-ext sign records a pending AMO upload here; keep it across
+# rebuilds so re-running package.sh picks up that upload's signed .xpi
+# instead of re-submitting the same version.
+AMO_UUID="$DIST/firefox/.amo-upload-uuid"
+SAVED_UUID=""
+[ -f "$AMO_UUID" ] && SAVED_UUID="$(cat "$AMO_UUID")"
+
 rm -rf "$DIST"
 
 for browser in chromium firefox; do
@@ -24,3 +31,7 @@ for browser in chromium firefox; do
   fi
   echo "Built $out"
 done
+
+if [ -n "$SAVED_UUID" ]; then
+  printf '%s' "$SAVED_UUID" > "$AMO_UUID"
+fi
