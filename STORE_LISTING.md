@@ -42,9 +42,7 @@ https://github.com/s3731804/lab-credential-sync
 
 **Store icon:** `extension/icons/icon-128.png`
 
-**Screenshots:** at least one is required, 1280×800 or 640×400. A
-screenshot of the popup showing "Helper connected", placed on a plain
-background at 1280×800, is enough.
+**Screenshot:** `store/screenshot-1280x800.png`
 
 ## Privacy practices tab
 
