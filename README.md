@@ -19,15 +19,28 @@ Linux and Windows.
    reads it, checks it looks like a real AWS Learner Lab credential
    block, and passes it to a small Python script (the "native
    messaging host") running on your own machine.
-3. That script writes the credentials to `~/.aws/credentials`
-   (backing up any existing file first) with `chmod 600` permissions.
+3. That script checks the block strictly (a `[profile]` header and
+   exactly the three expected keys, nothing else) and writes it to
+   `~/.aws/credentials` with `0600` permissions, under a
+   `# managed by aws-lab-sync` marker line.
+
+**Your existing credentials are never deleted.** If
+`~/.aws/credentials` doesn't have that marker — i.e. it's your own
+file, with real keys or other profiles — it's moved to
+`~/.aws/credentials.backup-<timestamp>` the first time, and the helper
+never touches that backup again. Files the helper wrote itself only
+ever hold expired lab credentials, so those are just kept as a single
+`credentials.previous` rather than piling up. If you had other
+profiles, copy them back from the backup into a separate file (or
+point `AWS_SHARED_CREDENTIALS_FILE` elsewhere) — the helper rewrites
+`~/.aws/credentials` on every sync.
 
 Nothing is sent anywhere except from your browser to a process running
 locally on your own computer. There is no server, no telemetry, no
 network request of any kind in either the extension or the host
 script — you can verify this by reading `extension/content.js`,
 `extension/background.js`, and `host/aws_lab_sync_host.py` in full;
-none of them total more than ~100 lines.
+none of them total more than ~150 lines.
 
 ## Why a native helper instead of just downloading a file?
 
@@ -136,7 +149,8 @@ no terminal command, every session.
 - Only runs on `vocareum.com` pages.
 - Only reads credentials already visible on the page — never
   interacts with AWS Details or Show on your behalf.
-- Only ever writes to `~/.aws/credentials`, nothing else.
+- Only ever writes to `~/.aws/credentials` and its backups
+  (`credentials.previous`, `credentials.backup-*`), nothing else.
 - Published as **unlisted** on the Chrome Web Store and (optionally)
   AMO — reviewed and signed, but not searchable; install links are
   only shared here and in the linked assignment.

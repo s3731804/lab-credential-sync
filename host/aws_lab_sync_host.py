@@ -8,17 +8,39 @@ and if it's a validated AWS Learner Lab credential block, writes it to
 ~/.aws/credentials with 0600 permissions. Responds with a JSON status
 over stdout using the same framing.
 
-This script does nothing else: it does not read arbitrary files, does
-not make network requests, and only ever writes to ~/.aws/credentials.
-Read it end to end before you install it — that's the point of
-distributing it as source rather than a binary.
+The file it writes starts with a marker comment. On each sync:
+  - if the existing file has the marker, this script wrote it, so it
+    only holds (expired) lab credentials: it's kept as
+    credentials.previous, replacing any older one;
+  - if it doesn't, it's yours — real keys, other profiles, anything —
+    so it's moved to a timestamped credentials.backup-<time> that this
+    script never deletes.
+
+This script does nothing else: it does not make network requests, only
+reads ~/.aws/credentials (to check for the marker), and only writes
+~/.aws/credentials and those backups. Read it end to end before you
+install it — that's the point of distributing it as source rather
+than a binary.
 """
 import sys
 import json
 import struct
 import os
-import stat
+import re
 import time
+
+MARKER = "# managed by aws-lab-sync - overwritten on each sync"
+
+# Exactly what a Learner Lab "AWS CLI" block contains. Anything else is
+# rejected rather than passed through, so a page can't slip extra
+# settings (e.g. credential_process, which the AWS CLI executes) into
+# your credentials file.
+PROFILE_RE = re.compile(r"^\[([A-Za-z0-9_.-]+)\]$")
+KEY_PATTERNS = {
+    "aws_access_key_id": re.compile(r"^(ASIA|AKIA)[A-Z0-9]{16}$"),
+    "aws_secret_access_key": re.compile(r"^[A-Za-z0-9/+=]{40}$"),
+    "aws_session_token": re.compile(r"^[A-Za-z0-9/+=]{100,}$"),
+}
 
 
 def read_message():
@@ -37,30 +59,72 @@ def send_message(message_dict):
     sys.stdout.buffer.flush()
 
 
-def is_valid_credentials(text):
-    return (
-        "aws_access_key_id" in text
-        and "aws_secret_access_key" in text
-        and "aws_session_token" in text
-    )
+def parse_credentials(text):
+    """Return (profile, {key: value}) or raise ValueError."""
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    if not lines:
+        raise ValueError("Empty credential block.")
+
+    header = PROFILE_RE.match(lines[0])
+    if not header:
+        raise ValueError("Credential block must start with a [profile] header.")
+
+    values = {}
+    for line in lines[1:]:
+        key, sep, value = line.partition("=")
+        key, value = key.strip(), value.strip()
+        if not sep or key not in KEY_PATTERNS or key in values:
+            raise ValueError(f"Unexpected line in credential block: {key!r}")
+        if not KEY_PATTERNS[key].match(value):
+            raise ValueError(f"Malformed value for {key}.")
+        values[key] = value
+
+    missing = set(KEY_PATTERNS) - set(values)
+    if missing:
+        raise ValueError(f"Credential block missing: {', '.join(sorted(missing))}")
+
+    return header.group(1), values
+
+
+def is_ours(path):
+    try:
+        with open(path, encoding="utf-8") as f:
+            return f.readline().strip() == MARKER
+    except (OSError, UnicodeDecodeError):
+        return False
 
 
 def write_credentials(creds_text):
-    if not is_valid_credentials(creds_text):
-        raise ValueError("Credential block missing required fields.")
+    profile, values = parse_credentials(creds_text)
 
     aws_dir = os.path.expanduser("~/.aws")
     os.makedirs(aws_dir, exist_ok=True, mode=0o700)
     cred_path = os.path.join(aws_dir, "credentials")
+    tmp_path = os.path.join(aws_dir, f".credentials.aws-lab-sync-{os.getpid()}")
 
-    if os.path.exists(cred_path) or os.path.islink(cred_path):
-        backup = f"{cred_path}.backup-{int(time.time())}"
-        os.rename(cred_path, backup)
+    content = "\n".join(
+        [MARKER, f"[{profile}]"] + [f"{k}={values[k]}" for k in KEY_PATTERNS]
+    ) + "\n"
 
-    with open(cred_path, "w") as f:
-        f.write(creds_text + "\n")
+    # Created 0600 from the start, so the file is never briefly readable
+    # by other users the way write-then-chmod would leave it.
+    fd = os.open(tmp_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(content)
+            f.flush()
+            os.fsync(f.fileno())
 
-    os.chmod(cred_path, stat.S_IRUSR | stat.S_IWUSR)  # 0600
+        if os.path.exists(cred_path) or os.path.islink(cred_path):
+            if is_ours(cred_path):
+                os.replace(cred_path, cred_path + ".previous")
+            else:
+                os.rename(cred_path, f"{cred_path}.backup-{int(time.time())}")
+
+        os.replace(tmp_path, cred_path)
+    finally:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
 
 
 def main():
