@@ -1,0 +1,9 @@
+{
+  "name": "com.aws_lab_sync.host",
+  "description": "Writes AWS Learner Lab credentials to ~/.aws/credentials",
+  "path": "__HOST_SCRIPT_PATH__",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://__EXTENSION_ID__/"
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "AWS Learner Lab Sync",
+  "version": "2.0",
+  "description": "Syncs revealed AWS Learner Lab CLI credentials to your local AWS config via a native helper you install yourself.",
+
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "aws-lab-sync@yourname.github.io",
+      "strict_min_version": "109.0"
+    }
+  },
+
+  "permissions": [
+    "nativeMessaging",
+    "storage"
+  ],
+
+  "action": {
+    "default_popup": "popup.html"
+  },
+
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.vocareum.com/*"
+      ],
+      "all_frames": true,
+      "js": [
+        "content.js"
+      ]
+    }
+  ],
+
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  }
+}
