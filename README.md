@@ -39,14 +39,27 @@ first, since step 2 installs a small program on your computer.
 
 ### Chrome / Chromium / Brave / Edge
 
-Chrome Web Store link coming soon. For now, see
-[Loading from source](#loading-from-source-instead).
+1. **[Add to Chrome](https://chromewebstore.google.com/detail/lab-credential-sync/edgfieafnmggobcecofedjoigfchflom)** from the Chrome Web Store (also works
+   in Brave and Edge).
+2. **Install the helper**, by pasting one line into a terminal:
+
+   macOS / Linux:
+   ```bash
+   curl -fsSL https://github.com/s3731804/lab-credential-sync/releases/latest/download/install.sh | bash -s -- --chrome edgfieafnmggobcecofedjoigfchflom
+   ```
+   Windows (PowerShell):
+   ```powershell
+   iwr -useb https://github.com/s3731804/lab-credential-sync/releases/latest/download/install.ps1 -OutFile $env:TEMP\lcs-install.ps1; powershell -ExecutionPolicy Bypass -File $env:TEMP\lcs-install.ps1 -ChromeExtensionId edgfieafnmggobcecofedjoigfchflom
+   ```
+3. Click the key icon in the toolbar (pin it from the puzzle-piece
+   menu first). It should say **Helper connected**. Then just start
+   your lab and click **Show** as usual.
 
 ### Prefer to read the installer before running it?
 
 Download [`install.sh`](https://github.com/s3731804/lab-credential-sync/releases/latest/download/install.sh)
 (or [`install.ps1`](https://github.com/s3731804/lab-credential-sync/releases/latest/download/install.ps1)),
-read it, then run `bash install.sh --firefox`. It fetches the helper
+read it, then run `bash install.sh --firefox` (or `--chrome edgfieafnmggobcecofedjoigfchflom`). It fetches the helper
 from the same release it came from. The step-by-step setup below
 does the same thing from a clone of the repo.
 
@@ -103,16 +116,16 @@ load it from source instead; see "Loading from source" further down.
 
 ### Chrome / Chromium / Brave / Edge
 
-1. Install from the direct (unlisted) Chrome Web Store link:
-   **[chrome web store link — fill in after publishing]**
-2. Once installed, copy the extension ID shown on its card at
-   `chrome://extensions`.
-3. Install the helper:
+1. Install from the (unlisted) [Chrome Web Store](https://chromewebstore.google.com/detail/lab-credential-sync/edgfieafnmggobcecofedjoigfchflom).
+2. Install the helper, with the store version's extension ID:
    ```bash
    cd host
-   ./install.sh --chrome <your-extension-id>
+   ./install.sh --chrome edgfieafnmggobcecofedjoigfchflom
    ```
-   Windows: `.\install.ps1 -ChromeExtensionId "<your-extension-id>"`
+   Windows: `.\install.ps1 -ChromeExtensionId "edgfieafnmggobcecofedjoigfchflom"`
+
+   If you loaded the extension from source instead, use the ID shown
+   on its card at `chrome://extensions`.
 
    This registers the helper with every Chromium-based browser it
    finds (Chrome, Chromium, Brave, Edge). On macOS/Linux a browser is
