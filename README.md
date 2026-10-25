@@ -35,7 +35,8 @@ first, since step 2 installs a small program on your computer.
    iwr -useb https://github.com/s3731804/lab-credential-sync/releases/latest/download/install.ps1 -OutFile $env:TEMP\lcs-install.ps1; powershell -ExecutionPolicy Bypass -File $env:TEMP\lcs-install.ps1 -Firefox
    ```
 3. Click the key icon in the toolbar. It should say **Helper
-   connected**. Then just start your lab and click **Show** as usual.
+   connected**. Switch **Sync credentials** on, then just start your
+   lab and click **Show** as usual.
 
 ### Chrome / Chromium / Brave / Edge
 
@@ -52,8 +53,9 @@ first, since step 2 installs a small program on your computer.
    iwr -useb https://github.com/s3731804/lab-credential-sync/releases/latest/download/install.ps1 -OutFile $env:TEMP\lcs-install.ps1; powershell -ExecutionPolicy Bypass -File $env:TEMP\lcs-install.ps1 -ChromeExtensionId edgfieafnmggobcecofedjoigfchflom
    ```
 3. Click the key icon in the toolbar (pin it from the puzzle-piece
-   menu first). It should say **Helper connected**. Then just start
-   your lab and click **Show** as usual.
+   menu first). It should say **Helper connected**. Switch **Sync
+   credentials** on, then just start your lab and click **Show** as
+   usual.
 
 ### Prefer to read the installer before running it?
 
@@ -80,13 +82,20 @@ does the same thing from a clone of the repo.
 **Your existing credentials are never deleted.** If
 `~/.aws/credentials` doesn't have that marker — i.e. it's your own
 file, with real keys or other profiles — it's moved to
-`~/.aws/credentials.backup-<timestamp>` the first time, and the helper
-never touches that backup again. Files the helper wrote itself only
-ever hold expired lab credentials, so those are just kept as a single
-`credentials.previous` rather than piling up. If you had other
-profiles, copy them back from the backup into a separate file (or
-point `AWS_SHARED_CREDENTIALS_FILE` elsewhere) — the helper rewrites
-`~/.aws/credentials` on every sync.
+`~/.aws/credentials.backup-<timestamp>` the first time. Files the
+helper wrote itself only ever hold expired lab credentials, so those
+are just kept as a single `credentials.previous` rather than piling
+up.
+
+**Switching sync off puts your file back.** The extension's popup has
+a **Sync credentials** switch, off until you turn it on. Turning it off stops syncing, moves your
+newest `credentials.backup-*` back into place as `~/.aws/credentials`,
+and deletes the lab credentials it wrote (if you had no file before,
+the lab one is just removed). It only does this while
+`~/.aws/credentials` still has the marker, so a file you've put back or
+edited yourself is left alone. Turning it back on syncs straight away
+if your credentials are already showing on the lab page, no need to
+hide and re-show them.
 
 Nothing is sent anywhere except from your browser to a process running
 locally on your own computer. There is no server, no telemetry, no
@@ -183,16 +192,46 @@ check the IDs line up between the extension and the install command.
 
 ## Using it
 
-Start your Learner Lab as normal. Once it's ready, click **AWS
+Switch **Sync credentials** on in the extension's popup (once; it
+stays on). Start your Learner Lab as normal. Once it's ready, click **AWS
 Details → Show** next to the CLI credentials, same as you always do.
 The extension picks them up from there automatically — no copy/paste,
-no terminal command, every session.
+no terminal command, every session — and shows a brief "Credentials
+saved" message in the corner of the page.
+
+**Updating from 2.0?** Re-run the helper install command above once:
+switching sync off needs the 2.1 helper. The popup tells you if your
+helper is out of date.
 
 ## Uninstalling
 
+Run the uninstall command first, then remove the extension from your
+browser. (Removing the extension opens this page, since an extension
+can't clean up after itself.)
+
+macOS / Linux:
+```bash
+curl -fsSL https://github.com/s3731804/lab-credential-sync/releases/latest/download/install.sh | bash -s -- --uninstall
+```
+Windows (PowerShell):
+```powershell
+iwr -useb https://github.com/s3731804/lab-credential-sync/releases/latest/download/install.ps1 -OutFile $env:TEMP\lcs-install.ps1; powershell -ExecutionPolicy Bypass -File $env:TEMP\lcs-install.ps1 -Uninstall
+```
+
+This puts your previous `~/.aws/credentials` back (or removes the
+lab one, if you had none), the same as switching sync off, then
+deletes the helper (`~/.lab-credential-sync/`) and its browser
+registrations. From a clone, it's `host/install.sh --uninstall` or
+`host\install.ps1 -Uninstall`. Any older `credentials.backup-*` files
+are left for you to delete.
+
+<details>
+<summary>Removing it by hand instead</summary>
+
+- Switch sync off in the popup first, so your previous credentials
+  file is put back.
 - Remove the extension from your browser (`chrome://extensions` or
-  `about:debugging` → Remove, for Firefox temporary add-ons it's
-  enough to just restart the browser).
+  `about:addons`).
 - Delete `~/.lab-credential-sync/` (the helper script).
 - Delete the native messaging manifest:
   - Chromium-based, macOS: `com.lab_credential_sync.host.json` in the `NativeMessagingHosts` folder under `~/Library/Application Support/` → `Google/Chrome`, `Chromium`, `BraveSoftware/Brave-Browser` or `Microsoft Edge`.
@@ -201,6 +240,8 @@ no terminal command, every session.
   - Firefox, macOS: `~/Library/Application Support/Mozilla/NativeMessagingHosts/com.lab_credential_sync.host.json`
   - Firefox, Linux: `~/.mozilla/native-messaging-hosts/com.lab_credential_sync.host.json`
   - Firefox, Windows: delete the `HKCU:\Software\Mozilla\NativeMessagingHosts\com.lab_credential_sync.host` registry key.
+
+</details>
 
 ## Packaging for the stores (maintainers)
 
@@ -224,7 +265,8 @@ differ.
 - Only reads credentials already visible on the page — never
   interacts with AWS Details or Show on your behalf.
 - Only ever writes to `~/.aws/credentials` and its backups
-  (`credentials.previous`, `credentials.backup-*`), nothing else.
+  (`credentials.previous`, `credentials.backup-*`), nothing else, and
+  only deletes files it wrote itself.
 - Published as **unlisted** on the Chrome Web Store and (optionally)
   AMO — reviewed and signed, but not searchable; install links are
   only shared here and in the linked assignment.

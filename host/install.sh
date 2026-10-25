@@ -7,9 +7,14 @@
 #   ./install.sh --chrome <extension-id>
 #   ./install.sh --firefox
 #   ./install.sh --chrome <extension-id> --firefox
+#   ./install.sh --uninstall
 #
 # Or without cloning the repo:
 #   curl -fsSL https://github.com/s3731804/lab-credential-sync/releases/latest/download/install.sh | bash -s -- --firefox
+#
+# --uninstall puts back the ~/.aws/credentials the helper replaced (if
+# it still has the helper's marker), then removes the helper and its
+# browser registrations.
 #
 # --chrome registers with every Chromium-based browser that has a
 # profile directory, so open a newly installed browser once before
@@ -23,6 +28,7 @@ set -euo pipefail
 CHROME_EXT_ID=""
 DO_CHROME=false
 DO_FIREFOX=false
+DO_UNINSTALL=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -39,6 +45,10 @@ while [[ $# -gt 0 ]]; do
       DO_FIREFOX=true
       shift
       ;;
+    --uninstall)
+      DO_UNINSTALL=true
+      shift
+      ;;
     *)
       echo "Unknown argument: $1"
       exit 1
@@ -46,8 +56,8 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [ "$DO_CHROME" = false ] && [ "$DO_FIREFOX" = false ]; then
-  echo "Usage: $0 --chrome <extension-id> | --firefox | both"
+if [ "$DO_CHROME" = false ] && [ "$DO_FIREFOX" = false ] && [ "$DO_UNINSTALL" = false ]; then
+  echo "Usage: $0 --chrome <extension-id> | --firefox | both | --uninstall"
   exit 1
 fi
 
@@ -82,13 +92,47 @@ fi
 
 INSTALL_DIR="$HOME/.lab-credential-sync"
 HOST_SCRIPT="$INSTALL_DIR/lab_credential_sync_host.py"
+MANIFEST_NAME="com.lab_credential_sync.host.json"
+
+# Where each browser looks for native messaging host manifests.
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  BASE="$HOME/Library/Application Support"
+  BROWSERS=(
+    "Chrome|$BASE/Google/Chrome"
+    "Chromium|$BASE/Chromium"
+    "Brave|$BASE/BraveSoftware/Brave-Browser"
+    "Edge|$BASE/Microsoft Edge"
+  )
+  FIREFOX_MANIFEST_DIR="$BASE/Mozilla/NativeMessagingHosts"
+else
+  BASE="${XDG_CONFIG_HOME:-$HOME/.config}"
+  BROWSERS=(
+    "Chrome|$BASE/google-chrome"
+    "Chromium|$BASE/chromium"
+    "Brave|$BASE/BraveSoftware/Brave-Browser"
+    "Edge|$BASE/microsoft-edge"
+  )
+  FIREFOX_MANIFEST_DIR="$HOME/.mozilla/native-messaging-hosts"
+fi
+
+if [ "$DO_UNINSTALL" = true ]; then
+  # Uses this release's copy of the helper rather than the installed
+  # one, which may predate --restore. stdin is closed so an old copy
+  # couldn't read this script from the curl pipe.
+  python3 "$SCRIPT_DIR/lab_credential_sync_host.py" --restore < /dev/null
+  for entry in "${BROWSERS[@]}"; do
+    rm -f "${entry#*|}/NativeMessagingHosts/$MANIFEST_NAME"
+  done
+  rm -f "$FIREFOX_MANIFEST_DIR/$MANIFEST_NAME"
+  rm -rf "$INSTALL_DIR"
+  echo "Removed the helper and its browser registrations."
+  echo "Remove the extension from your browser too, if you haven't already."
+  exit 0
+fi
 
 mkdir -p "$INSTALL_DIR"
 cp "$SCRIPT_DIR/lab_credential_sync_host.py" "$HOST_SCRIPT"
 chmod +x "$HOST_SCRIPT"
-
-IS_MAC=false
-[[ "$OSTYPE" == "darwin"* ]] && IS_MAC=true
 
 register_chromium() {
   local label="$1" manifest_dir="$2"
@@ -97,8 +141,8 @@ register_chromium() {
     -e "s#__HOST_SCRIPT_PATH__#$HOST_SCRIPT#" \
     -e "s#__EXTENSION_ID__#$CHROME_EXT_ID#" \
     "$SCRIPT_DIR/com.lab_credential_sync.host.chromium.json.template" \
-    > "$manifest_dir/com.lab_credential_sync.host.json"
-  echo "$label: registered manifest at $manifest_dir/com.lab_credential_sync.host.json"
+    > "$manifest_dir/$MANIFEST_NAME"
+  echo "$label: registered manifest at $manifest_dir/$MANIFEST_NAME"
 }
 
 if [ "$DO_CHROME" = true ]; then
@@ -106,24 +150,6 @@ if [ "$DO_CHROME" = true ]; then
   # its own profile directory. Register with every one that's installed
   # (i.e. has a profile directory), falling back to Google Chrome if
   # none are found yet.
-  if [ "$IS_MAC" = true ]; then
-    BASE="$HOME/Library/Application Support"
-    BROWSERS=(
-      "Chrome|$BASE/Google/Chrome"
-      "Chromium|$BASE/Chromium"
-      "Brave|$BASE/BraveSoftware/Brave-Browser"
-      "Edge|$BASE/Microsoft Edge"
-    )
-  else
-    BASE="${XDG_CONFIG_HOME:-$HOME/.config}"
-    BROWSERS=(
-      "Chrome|$BASE/google-chrome"
-      "Chromium|$BASE/chromium"
-      "Brave|$BASE/BraveSoftware/Brave-Browser"
-      "Edge|$BASE/microsoft-edge"
-    )
-  fi
-
   REGISTERED=0
   for entry in "${BROWSERS[@]}"; do
     profile_dir="${entry#*|}"
@@ -141,19 +167,15 @@ if [ "$DO_CHROME" = true ]; then
 fi
 
 if [ "$DO_FIREFOX" = true ]; then
-  if [ "$IS_MAC" = true ]; then
-    MANIFEST_DIR="$HOME/Library/Application Support/Mozilla/NativeMessagingHosts"
-  else
-    MANIFEST_DIR="$HOME/.mozilla/native-messaging-hosts"
-  fi
+  MANIFEST_DIR="$FIREFOX_MANIFEST_DIR"
   mkdir -p "$MANIFEST_DIR"
 
   sed \
     -e "s#__HOST_SCRIPT_PATH__#$HOST_SCRIPT#" \
     "$SCRIPT_DIR/com.lab_credential_sync.host.firefox.json.template" \
-    > "$MANIFEST_DIR/com.lab_credential_sync.host.json"
+    > "$MANIFEST_DIR/$MANIFEST_NAME"
 
-  echo "Firefox: registered manifest at $MANIFEST_DIR/com.lab_credential_sync.host.json"
+  echo "Firefox: registered manifest at $MANIFEST_DIR/$MANIFEST_NAME"
 fi
 
 echo ""

@@ -16,6 +16,14 @@ The file it writes starts with a marker comment. On each sync:
     so it's moved to a timestamped credentials.backup-<time> that this
     script never deletes.
 
+When sync is switched off in the extension, it undoes this: if
+~/.aws/credentials still has the marker, the newest
+credentials.backup-<time> is moved back into place (or, with no
+backup, the file is deleted, since there was none before), and
+credentials.previous is deleted. A file without the marker is never
+touched. The uninstall command (install.sh --uninstall) does the same
+by running this script with --restore.
+
 This script does nothing else: it does not make network requests, only
 reads ~/.aws/credentials (to check for the marker), and only writes
 ~/.aws/credentials and those backups. Read it end to end before you
@@ -28,6 +36,11 @@ import struct
 import os
 import re
 import time
+import glob
+
+# Reported to the extension's popup, so it can tell you when the
+# helper is older than the extension and needs reinstalling.
+VERSION = "2.1"
 
 MARKER = "# managed by lab-credential-sync - overwritten on each sync"
 
@@ -94,12 +107,59 @@ def is_ours(path):
         return False
 
 
+def credentials_path():
+    return os.path.join(os.path.expanduser("~/.aws"), "credentials")
+
+
+def restore_backup():
+    """Put back the file this script displaced, if it's still in charge.
+
+    Returns "restored", "removed" (nothing to restore, so the lab file
+    was deleted), "not_ours" (the file isn't one this script wrote, so
+    it's left alone) or "nothing" (no file at all).
+    """
+    cred_path = credentials_path()
+    previous = cred_path + ".previous"
+
+    if os.path.exists(cred_path) or os.path.islink(cred_path):
+        if not is_ours(cred_path):
+            return "not_ours"
+    elif not os.path.exists(previous):
+        return "nothing"
+
+    backups = []
+    for path in glob.glob(glob.escape(cred_path) + ".backup-*"):
+        stamp = path.rsplit("-", 1)[1]
+        if stamp.isdigit():
+            backups.append((int(stamp), path))
+
+    if backups:
+        os.replace(max(backups)[1], cred_path)
+        result = "restored"
+    else:
+        if os.path.exists(cred_path) or os.path.islink(cred_path):
+            os.remove(cred_path)
+        result = "removed"
+
+    if os.path.exists(previous):
+        os.remove(previous)
+    return result
+
+
+RESTORE_MESSAGES = {
+    "restored": "Put back your previous ~/.aws/credentials.",
+    "removed": "Removed the lab credentials (you had no ~/.aws/credentials before).",
+    "not_ours": "Left ~/.aws/credentials alone: it wasn't written by Lab Credential Sync.",
+    "nothing": "No ~/.aws/credentials to restore.",
+}
+
+
 def write_credentials(creds_text):
     profile, values = parse_credentials(creds_text)
 
-    aws_dir = os.path.expanduser("~/.aws")
+    cred_path = credentials_path()
+    aws_dir = os.path.dirname(cred_path)
     os.makedirs(aws_dir, exist_ok=True, mode=0o700)
-    cred_path = os.path.join(aws_dir, "credentials")
     tmp_path = os.path.join(aws_dir, f".credentials.lab-credential-sync-{os.getpid()}")
 
     content = "\n".join(
@@ -132,7 +192,7 @@ def main():
     msg_type = msg.get("type")
 
     if msg_type == "PING":
-        send_message({"status": "ok"})
+        send_message({"status": "ok", "version": VERSION})
         return
 
     if msg_type == "NEW_CREDENTIALS":
@@ -143,8 +203,20 @@ def main():
             send_message({"status": "error", "message": str(e)})
         return
 
+    if msg_type == "RESTORE":
+        try:
+            send_message({"status": "ok", "result": restore_backup()})
+        except Exception as e:
+            send_message({"status": "error", "message": str(e)})
+        return
+
     send_message({"status": "error", "message": f"Unknown message type: {msg_type}"})
 
 
 if __name__ == "__main__":
-    main()
+    # Browsers pass their own arguments (the extension's origin), so
+    # only this exact one means it was run by hand or by the uninstaller.
+    if sys.argv[1:] == ["--restore"]:
+        print(RESTORE_MESSAGES[restore_backup()])
+    else:
+        main()

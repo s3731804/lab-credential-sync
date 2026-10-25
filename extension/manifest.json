@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Lab Credential Sync",
-  "version": "2.0",
+  "version": "2.1",
   "description": "Unofficial companion for AWS Academy Learner Lab: syncs the CLI credentials you reveal to ~/.aws/credentials via a local helper.",
 
   "browser_specific_settings": {

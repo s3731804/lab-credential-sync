@@ -1,6 +1,6 @@
 # Privacy Policy — Lab Credential Sync
 
-_Last updated: 24 October 2026_
+_Last updated: 25 October 2026_
 
 Lab Credential Sync is an unofficial browser extension and local
 helper script for AWS Academy Learner Lab. This policy covers both.
@@ -8,8 +8,9 @@ helper script for AWS Academy Learner Lab. This policy covers both.
 ## The short version
 
 Nothing is collected, and nothing leaves your computer. There is no
-server, no analytics, no telemetry, and no network request of any kind
-in the extension or the helper.
+server, no analytics, no telemetry, and no network request in the
+extension or the helper. The only page the extension ever opens is the
+README's uninstall steps, when you remove it.
 
 ## What the extension reads
 
@@ -34,9 +35,10 @@ exactly how).
 
 ## What the extension stores
 
-In the browser's local extension storage, it keeps only whether the
-last sync succeeded and when it happened, so the popup can show you
-that. It does not store the credentials themselves.
+In the browser's local extension storage, it keeps only whether sync
+is switched on, whether the last sync (or restore) succeeded, and when
+it happened, so the popup can show you that. It does not store the
+credentials themselves.
 
 ## What is shared
 
@@ -47,9 +49,11 @@ file.
 
 ## Removing it
 
-Uninstalling the extension deletes its local storage. To remove
-everything the helper wrote, follow the uninstall steps in the
-[README](README.md#uninstalling). Your `~/.aws/credentials` file and
+Uninstalling the extension deletes its local storage, and your
+browser opens the uninstall steps in the
+[README](README.md#uninstalling) on GitHub. That is an ordinary page
+visit with nothing about you added to the address. Those steps put
+your previous credentials file back and remove the helper. Your `~/.aws/credentials` file and
 its backups are ordinary files on your computer that you can delete
 at any time.
 

@@ -29,6 +29,9 @@
     .status-missing {
       background: #fff3cd; border: 1px solid #ffeeba; color: #856404;
     }
+    .status-outdated {
+      background: #fff3cd; border: 1px solid #ffeeba; color: #856404;
+    }
     .status-error {
       background: #fdecea; border: 1px solid #f5c2c0; color: #611a15;
     }
@@ -50,6 +53,27 @@
       margin-bottom: 8px;
     }
 
+    .toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .toggle-row label { font-size: 13px; color: #232f3e; font-weight: 600; }
+    .switch { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; margin: 0; }
+    .slider {
+      position: absolute; inset: 0; border-radius: 10px;
+      background: #bbb; cursor: pointer; transition: background .15s;
+    }
+    .slider::before {
+      content: ""; position: absolute; left: 2px; top: 2px;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: #fff; transition: transform .15s;
+    }
+    .switch input:checked + .slider { background: #2e7d32; }
+    .switch input:checked + .slider::before { transform: translateX(16px); }
+    .switch input:focus-visible + .slider { outline: 2px solid #232f3e; outline-offset: 2px; }
+    #toggle-note { margin-bottom: 12px; }
+
     code {
       background: #eee; color: #333; padding: 1px 4px; border-radius: 3px;
       font-size: 11px;
@@ -58,6 +82,15 @@
 </head>
 <body>
   <h3>Lab Credential Sync</h3>
+
+  <div class="toggle-row">
+    <label for="enabled">Sync credentials</label>
+    <span class="switch">
+      <input type="checkbox" id="enabled" role="switch">
+      <label for="enabled" class="slider" aria-hidden="true"></label>
+    </span>
+  </div>
+  <p id="toggle-note"></p>
 
   <div id="status" class="status-banner status-missing">
     Checking for local helper...
@@ -79,8 +112,8 @@
   </div>
 
   <div class="info-banner">
-    <strong>What this does:</strong> once the helper is installed,
-    start your Learner Lab as normal and reveal the AWS CLI
+    <strong>What this does:</strong> once the helper is installed and
+    sync is on, start your Learner Lab as normal and reveal the AWS CLI
     credentials yourself using <strong>Show</strong>. This extension
     only reads credentials already visible on the page — it never
     clicks Show for you. Credentials never leave your device.
